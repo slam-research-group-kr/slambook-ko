@@ -1,20 +1,24 @@
-## 실습: Frontend 디자인
+# 제 9장: 실습: Frontend 디자인
 
-### 주요 목표
+----
+
+## 주요 목표
 
 1.  Visual odometry frontend를 실제로 설계하십시오
 2.  SLAM 소프트웨어 프레임워크의 구축 방법을 이해하십시오.
 3.  Frontend 디자인에서 쉽게 발생하는 문제와 이를 수정하는 방법을 이해하십시오.
 
-### 챕터 소개
+## 챕터 소개
 
 우리는 처음 두 강의에서 배운 지식을 사용하여 Visual odometry 프로그램을 직접 작성할 것 입니다. 독자분들께선 카메라의 궤도와 랜드마크 지점 관리하고, 이를 통해 소프트웨어 프레임 워크 구성 방법을 경험할 것입니다. 이러한 과정에서 우리는 많은 문제를 겪을 것입니다 : 카메라가 너무 빨리 움직이거나, 이미지가 흐리거나, 특징 점 불일치등의 문제들은 알고리즘이 실패하게 할 것 입니다. 프로그램을 원활하게 운영하려면 위의 상황을 처리해야합니다. 이번 그러면 프로젝트 구현에 대한 많은 유용한 토론이 이루어집니다. 또, 이 강의에선 프로젝트를 실용화 하는데에 유용한 관점들을 소개합니다.
+
+------
 
 ### 9.1 VO 프레임워크 구축
 
 벽돌과 시멘트의 원리를 이해한다고 멋있는 궁전을 지을 수 있는 것은 아닙니다. 저자가 좋아하는 게임인 ‘마인크래프트’의 세계 속 플레이어들은 색과 성질이 다른 여러 종류의 정육면체들을 사용할 수 있습니다. 이 정육면체들을 사용하는 법은 굉장히 쉬운데, 단지 빈 공간에 정육면체들을 가져다 놓기만 하면 됩니다. 하지만 실제로 이 정육면체들로 무언가를 만들어 보려고 하면, 초심자들은 성냥갑처럼 생긴 집 정도밖에 만들지 못 하는데에 비해, 경험이 많고 창작적인 플레이어들은 집, 정원, 테라스, 파빌리온, 심지어 도시 등을 만들곤 합니다 (그림 9-1)®.
 
-**[image 9-1 삽입]**
+![image 9-1](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/img_9_1.png?raw=true)
 그림 9-1 시작은 작을 수 있으나,  점점 복잡한 구조를 구현함으로써 뛰어난  작품을 만듭니다.
 
 SLAM 프로그램을 구현할때는, 우리는 우리가 이해하는 공학적 구현법과 알고리즘들이, 프로그램의 전체적인 작성법 만큼이나 중요하다고 생각하곤 합니다. 하지만, 알고리즘을 이해한다는 것은 마치 ‘마인크래프트’ 게임 속 각각의 정육면체들의 성질을 잘 이해한다는 것과 같으며, 다만 그 정육면체들을 이해하는 것만으론 멋진 건물을 지을 수 없는것처럼, 알고리즘을 이해하는 것 만으로는 멋진 프로그램을 작성할 수 있는 것은 아닙니다. 프로그램을 잘 짜려면 많은 시도와 경험이 필요하며, 저자는 이 과정이 복잡하고 어려울 수 있어도 독자들이 직접 도전해보며 부딪치는 것을 권장합니다. “마인크래프트” 세계에서도 멋진 건물을 짓기 위해서는 기둥, 벽, 지붕의 구조, 벽 무늬 및 기하학적 각도 계산법 등을 익혀야 하며, 이는 정육면체들의 성질을 배우는 과정과는 큰 차이가 있습니다.
@@ -43,7 +47,7 @@ SLAM을 구현하는 데에도 같은 방법으로 접근해야 합니다. 잘 �
 
 위 설명은 그림 9-2와 같은 디렉토리 구조입니다. 이 방법은 이전 강의에서 흩어져 있던 main.cpp보다 체계적입니다. 다음으로 이 디렉토리에 새 파일을 계속 추가하고 점진적으로 완전한 프로그램을 작성합니다.
 
-**그림 9-2 디렉토리 구조 삽입 **
+![image 9-2](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/img_9_2.png?raw=true)
 그림 9-2 디렉토리 구조
 
 #### 9.1.2 기본 데이터 구조 결정
@@ -62,7 +66,7 @@ C ++의 클래스로 표현되는 프레임 및 랜드마크의 개념을 정의
 
 이제 VO를 시작하겠습니다. 이 버전을 버전 0.1로 설정하여 시작 단계임을 나타냅니다. 프레임은 프레임, 카메라는 카메라 모델, MapPoint는 특징 지점 / 랜드마크 지점, 지도는 특징 지점을 관리하며, Config는 구성 매개 변수를 제공합니다. 이들의 관계는 그림 9-3과 같습니다. 우리는 데이터 멤버와 일반적인 메소드 만 작성하고 나중에 더 많은 컨텐츠가 사용되면 나중에 추가합니다.
 
-**그림 9-3 삽입**
+![image 9-3](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/img_9_3.png?raw=true)
 그림 9-3. 기본 클래스의 관계에 대한 개략도.
 
 Camera 클래스가 가장 쉽습니다. 먼저 구현하십시오.
@@ -71,36 +75,28 @@ Camera 클래스가 가장 쉽습니다. 먼저 구현하십시오.
 
 Camera 클래스는 카메라의 내부 및 외부 매개 변수를 저장하고 카메라 좌표계, 픽셀 좌표계 및 월드 좌표계 간의 좌표 변환을 수행합니다. 물론 월드 좌표계에서는 카메라의 (가변) 외부 매개 변수가 필요합니다. 외부 매개 변수는 매개 변수로 전달됩니다.
 
-slambook/project/0.1/include/myslam/camera.h
-
-** 코드 그림 삽입 **
+![camera.h](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/code_camera_h.PNG?raw=true)
+[Code](https://github.com/gaoxiang12/slambook/blob/master/project/0.1/include/myslam/camera.h)
 
 설명은 다음과 같습니다 (위에서 아래로).
 
 1. 이 간단한 예제에서는 헤더 파일의 중복 참조를 방지하는 ifndef 매크로 정의를 사용합니다. 이 매크로가 없으면 두 위치에서 헤더 파일을 참조 할 때 클래스의 중복 정의가 나타납니다. 따라서 이러한 매크로는 각 프로그램 헤더 파일에 정의됩니다.
-
 2. 클래스 이름 공간 정의를 namespace myslam (우리가 직접 작성한 SLAM 프로그램이기 때문에 myslam이라고 부름)로 둘러 쌉니다. 이름 공간을 사용함으로써 다른 라이브러리에서 같은 이름의 함수를 우연히 정의하는것을 방지할 수 있습니다. 매크로 정의와 이름 공간은 각 파일에 한 번 씩 작성되므로 여기에서 소개하고 추후에는 스킵할 것입니다.
-
 3. common_include.h 파일에 일반적으로 사용되는 헤더 파일을 넣습니다. 이로 인해 매번 긴 include 목록을 쓰는 것을 피할 수 있습니다.
-
 4. 우리는 스마트 포인터를 Camera의 포인터 유형으로 정의함으로써, 매개 변수를 전달할 때 Camera::Ptr 유형을 사용할 수 있습니다.
-
 5. Sophus::SE3를 사용하여 카메라의 포즈를 표현합니다. Sophus 라이브러리는 Lie 대수학에서 소개되었습니다. 소스 파일에서 Camera 메서드의 구현을 지정합니다.
 
-slambook/project/0.1/src/camera.cpp
-
-** 코드 그림 삽입 2**
+![camera.cpp](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/code_camera_cpp.PNG?raw=true)
+[Code Link](https://github.com/gaoxiang12/slambook/blob/master/project/0.1/src/camera.cpp)
 
 독자는 이 방법이 다섯 번째 강의의 내용과 일치하는지 확인할 수 있습니다. 픽셀 좌표계, 카메라 좌표계 및 세계 좌표계 간의 좌표 변환을 완료합니다.
-
 
 #### 9.1.3 Frame 클래스
 
 Frame 클래스를 살펴 보겠습니다. Frame 클래스는 여러 곳에서 사용되는 기본 데이터 단위이지만, 초기 설계 단계에서는 추후에 무엇이 추가될 지 알 수 없습니다. 그렇기에 프레임 클래스는 기본적인 데이터 저장과 인터페이스만을 제공합니다. 나중에 새 콘텐츠가있는 경우 계속 추가하십시오.
 
-slambook/project/0.1/include/myslam/frame.h
-
-**코드 그림 삽입 3**
+![frame.h](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/code_frame_h.PNG?raw=true)
+[Code](https://github.com/gaoxiang12/slambook/blob/master/project/0.1/include/myslam/frame.h)
 
 프레임에서는 ID, 타임 스탬프, 포즈, 카메라 및 이미지의 수를 정의합니다.이 파라미터들은 프레임에 포함 된 가장 중요한 정보입니다. 이 정보에서부터 Frame 만들기, 주어진 점에 해당하는 깊이 찾기, 카메라의 광학 중심 찾기, 점이 시야에 있는지 여부 등을 결정할 수 있습니다. 이것의 구현법은 간단함으로, 이 함수의 자세한 구현은 frame.cpp를 참조하십시오
 
@@ -108,10 +104,8 @@ slambook/project/0.1/include/myslam/frame.h
 
 MapPoint는 랜드 마크 포인트를 나타냅니다. 월드 좌표를 추정하고 현재 프레임에서 추출한 특징점을 지도의 랜드 마크 점과 일치시켜 카메라 모션을 추정하므로 해당 설명자를 저장해야합니다. 또한, 포인트가 관측 된 횟수와 일치되는 횟수를 통해 MapPoint가 얼마나 좋은지 또는 나쁜지를 나타내는 지표로 기록합니다.
 
-slambook/project/0.1/include/myslam/mappoint.h
-
-
-** 코드 그림 삽입 4**
+![mappoint.h](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/code_mappoint_h.PNG?raw=true)
+[Code](https://github.com/gaoxiang12/slambook/blob/master/project/0.1/include/myslam/mappoint.h)
 
 마찬가지로 독자는 src/map.cpp를 탐색하여 구현을 볼 수 있습니다. 지금까지는 이러한 데이터 멤버의 초기화 만 고려했습니다.
 
@@ -120,9 +114,8 @@ slambook/project/0.1/include/myslam/mappoint.h
 
 Map 클래스는 모든 랜드 마크를 관리하며 새로운 키 프레임을 추가하고 불량한 키 프레임을 삭제하는 등의 작업을 담당합니다. VO 매칭 과정은 맵을 다루기 만하면됩니다. 물론 Map도 많은 작업을 수행하지만 이 단계에서는 주요 데이터 구조 만 정의합니다.
 
-slambook/project/0.1/include/myslam/map.h
-
-**코드 그림 삽입 **
+![map.h](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/code_map_h.PNG?raw=true)
+[Code](https://github.com/gaoxiang12/slambook/blob/master/project/0.1/include/myslam/map.h)
 
 Map 클래스는 실제로 무작위 액세스가 필요하며 언제든지 삽입 및 삭제해야하는 키 프레임과 랜드 마크를 저장하므로 저장을 위해 해시(unordered_map)를 사용합니다.
 
@@ -130,17 +123,16 @@ Map 클래스는 실제로 무작위 액세스가 필요하며 언제든지 삽�
 
 Config 클래스는 매개 변수 파일을 읽고 프로그램의 어디서든지 매개 변수 값을 제공합니다. 이를 위해 우리는 싱글 톤 모드 (Singleton)로 Config를 작성합니다. 이 작성 법은 하나의 전역 객체를 가지고 있습니다. 매개 변수 파일을 설정할때에는, 객체를 생성하고 매개 변수 파일을 읽는데, 우리는 어디에서든지 이 매개 변수 값에 접근할 수 있고, 프로그램의 끝에서 이 매개 변수 값을 삭제할 수 있습니다.
 
-slambook/project/0.1/include/myslam/config.h
-
-**코드 그림 삽입**
+![config.h](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/code_config_h.PNG)
+[Code](https://github.com/gaoxiang12/slambook/blob/master/project/0.1/include/myslam/config.h)
 
 설명은 다음과 같습니다.
 
 1. 우선 생성자를 private로 선언하여, 이 클래스의 객체가 다른 곳에 빌드되는 것을 방지하고, setParameterFile에서만 생성할 수 있게 합니다. 실제 생성 된 객체는 Config의 스마트 포인터입니다 : static shared_ptr<Config>config. 스마트 포인터를 사용하는 이유는 자동으로 파괴되는 점을 이용해서, 다른 함수를 작성해서 파괴를 해야하는 수고를 덜 수 있기 때문입니다. 
 2. 파일 읽기를 위해 OpenCV에서 제공하는 FileStorage 클래스를 사용합니다. YAML 파일을 읽고 이 필드에 액세스 할 수 있습니다. 인수의 실제 값은 정수, 부동 소수점 또는 문자열 일 수 있으므로 템플릿 함수 get을 통해 모든 유형의 매개 변수 값을 가져옵니다. 아래는 Config의 구현입니다. 이 소스 파일에서 싱글 톤 패턴에 대한 전역 포인터를 정의했다는 점에 유의하십시오.
 
-slambook/project/0.1/src/config.cpp
-
+![config.cpp](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/code_config_cpp.png?raw=true)
+[Code](https://github.com/gaoxiang12/slambook/blob/master/project/0.1/src/config.cpp)
 ** 코드 그림 삽입 **
 
 구현시 매개 변수 파일의 존재 여부만 판단하면됩니다. 이 Config 클래스를 정의한 후에는 어디서나 매개 변수 파일의 매개 변수를 가져올 수 있습니다. 예를 들어, 카메라의 초점 거리 f x를 정의하려면 다음 단계를 수행하십시오.
@@ -148,7 +140,7 @@ slambook/project/0.1/src/config.cpp
 1. "Camera.fx : 500"를 매개 변수 파일에 추가하십시오.
 2. 코드에서 다음과 같이 구현 하면 :
 
-**코드 그림 삽입**
+![config.cpp_2](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/code_config_cpp_2.PNG?raw=true)
 
 f x의 값을 구할 수 있습니다.
 물론, 매개 변수 파일의 구현은 확실히 이것보다 더 복잡합니다. 우리는 주로 프로그램을 개발할 때, 편의성의 이유로 이 구현 방법을 사용합니다. 물론 독자는 매개 변수 구성을 더 간단한 방법으로 구현할 수도 있습니다.
@@ -164,11 +156,11 @@ f x의 값을 구할 수 있습니다.
 
 그림 9-4에는 두 프레임 간의 VO 작업에 대한 개략적인 다이어그램이 나와 있습니다. 이 VO에서는 참조 프레임 (Ref)과 현재 프레임 (Curr)의 두 가지 개념을 지니고 있습니다. 참조 프레임을 기준 좌표계로 취하고, 현재 프레임과의 피쳐를 매칭시켜 모션 관계를 추정합니다. 월드 프레임의 좌표계에 대한 참조 프레임의 좌표계의 변환 행렬을 T<sub>rw</sub>로하고, 월드 프레임의 좌표계에 대한 현재 프레임의 좌표계와의 사이에 라고 T<sub>cw</sub>가정하면, 추정 될 동작과 두 프레임의 변환 행렬은 왼쪽 곱셈 관계를 형성합니다 (left multiplication relationship).
 
-** Equation 그림 삽입**
+![Equation](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/Equation.PNG?raw=true)
 
 t - 1에서 t까지의 이동 경로를 구한다면, t - 1을 참조 프레임으로 취하여 t 시점의 움직임을 찾습니다. 이것은 특징 점 매칭, 옵티컬 플로우 또는 direct method로 수행 할 수 있습니다. 하지만 여기서 우리는 모션에만 신경을 쓰고 구조는 신경 쓰지 않습니다. 즉, 특징 점을 통해 모션이 성공적으로 획득되는 한,이 프레임의 특징점은 더 이상 필요하지 않습니다. 물론 이 방법은 결함이 있지만 많은 수의 특징 점을 무시하면 많은 계산을 줄일 수 있습니다. t에서 t + 1까지의 이동 경로를 구한다면, 우리는 t 시간을 참조 프레임으로 취하고 t와 t + 1 사이의 움직임 관계를 고려합니다. 왕복 운동을 하면 모션 트랙을 얻을 수 있습니다.
 
-** 9-4 그림 삽입 **
+![img 9_4](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/img_9_4.PNG?raw=true)
 그림 9-4  2 개의 프레임으로 구성된 VO 다이어그램.
 
 이 VO의 작동 방식은 간단하지만 이를 구현하는 방법은 여러 가지가 있습니다. 이를 달성하기 위해 전통적인 매칭 특징점 인 PnP 방법을 예로 사용합니다. 저자는 독자들이 이전의 강의 지식을 결합하여 optical flow / direct 방법의 VO 또는 프로그램 실행을 위한 ICP를 실현할 수 있기를 바랍니다. 특징 점을 매칭하는 방법에서 가장 중요한 것은 참조 프레임과 현재 프레임 간의 피쳐 매칭 관계입니다. 이 흐름은 다음과 같이 요약 할 수 있습니다.
@@ -184,6 +176,8 @@ VisualOdometry 클래스는 위 알고리즘의 구현을 제공합니다.
 
 slambook/project/0.2/include/myslam/visual_odometry.h
 
+![visual_odometry.h](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/code_visual_odometry_h.png?raw=true)
+[Code](https://github.com/gaoxiang12/slambook/blob/master/project/0.2/include/myslam/visual_odometry.h)
 ** 코드 그림 삽입**
 
 이 VisualOdometry 클래스에 대해 설명 할 몇 가지 사항이 있습니다.
@@ -192,19 +186,18 @@ slambook/project/0.2/include/myslam/visual_odometry.h
 2. 클래스에서 중간 변수를 정의하여 복잡한 매개 변수 전달의 필요성을 제거합니다. 그것들은 모두 클래스 내부에서 정의되었으므로 각 함수가 클래스에 액세스 할 수 있습니다.
 3. 특징 점 추출 및 일치의 매개 변수를 매개 변수 파일에서 읽습니다. 예 :
 
-** 코드 그림 삽입 **
+![visual_odometry.h_2](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/code_visual_odometry_h_2.PNG?raw=true)
 
 4. addFrame 함수는 외부 적으로 호출되는 인터페이스입니다. VO를 사용할 때 이미지 데이터를 Frame 클래스에로드 한 후 addFrame을 호출하여 포즈를 추정합니다. 이 함수는 VO가있는 상태에 따라 다른 작업을 구현합니다.
 
-** 코드 그림 삽입**
+![visual_odometry.h_3](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/code_visual_odometry_h_3.PNG?raw=true)
 
 다양한 이유로, 우리가 설계 한 위의 VO 알고리즘이 모든 단계에서 실패 할 수 있음을 언급 할 필요가 있습니다. 따라서 견고한 VO를 설계하려면 위에서 언급 한 모든 가능한 오류를 고려해야합니다 (분명히 명시 적으로 고려해야 함). 자연스럽게 프로그램이 복잡해집니다. checkEstimatedPose에서 inliers의 수와 모션의 크기를 기반으로 간단한 테스트를합니다. 내부 점이 너무 작지 않고 모션이 너무 클 수 없다고 생각합니다. 물론 독자는 문제를 발견하고 효과를 시험해 볼 수있는 다른 방법에 대해서도 생각할 수 있습니다.
 
 우리는 나머지 VisualOdometry 클래스를 건너 뛰고 독자는 GitHub에서 모든 소스 코드를 찾을 수 있습니다. 마지막으로 VO 테스트 프로그램을 추가하여 데이터 세트를 테스트하고 사용하여 예상되는 모션 효과를 관찰합니다.
 
-slambook/project/0.2/test/run_vo.cpp
-
-** 코드 그림 삽입 **
+![run_vo.cpp](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/code_run_vo_cpp.png?raw=true)
+[Code](https://github.com/gaoxiang12/slambook/blob/master/project/0.2/test/run_vo.cpp)
 
 이 프로그램을 실행하기 위해 할 일이 몇 가지 있습니다.
 
@@ -212,13 +205,13 @@ slambook/project/0.2/test/run_vo.cpp
 2. TUM 데이터 세트 중 하나를 준비하십시오. 간단히하기 위해 저자는 fr1_xyz를 권장합니다. associate.py를 사용하여 연결 파일 인 associate.txt를 생성하십시오. TUM 데이터 세트 형식은 8.3 절에 설명되어 있습니다.
 3. config / default.yaml에서 데이터 세트의 경로를 채우고 작성자의 작성 방법을 참조하십시오. 그런 다음
 
-** 코드 그림 삽입 **
+![run_vo.cpp_2](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/code_run_vo_cpp_2.PNG?raw=true)
 
 프로그램을 실행하면 그림 9-5와 같이 라이브 데모가 표시됩니다. 
 
 데모에서 현재 프레임의 이미지와 예상 위치를 볼 수 있습니다. 세계 좌표계의 좌표축 (큰 좌표축)과 현재 프레임의 좌표축 (작은 좌표축)을 그립니다. 색상과 축간의 대응은 blue-Z, red-X, green-Y입니다. 이론과 실제 구현 결과에  차이가 있지만 사용자의 예측과 어느정도 일치하는 카메라의 움직임을 직관적으로 느낄 수 있습니다. 이 프로그램은 또한 VO 단일 계산을위한 시간을 출력합니다.이 계산은 매번 작성자의 컴퓨터에서 약 30ms의 속도로 실행될 수 있습니다. 특징 지점의 수를 줄이면 작업 속도가 빨라질 수 있습니다. 독자는 작동 매개 변수와 데이터 세트를 수정하여 다양한 상황에서 어떻게 작동하는지 확인할 수 있습니다.
 
-** 9-5 그림 삽입 **
+![img 9_5](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/img_9_5.PNG?raw=true)
 그림 9-5 VO 데모 버전 0.2.
 
 #### 9.2.2. 토론
@@ -230,7 +223,7 @@ slambook/project/0.2/test/run_vo.cpp
 3. 기준 프레임 / 현재 프레임만을 고려한 포즈 추정법은, 추정을 기준 프레임에 너무 의존하게 만듭니다. 기준 프레임의 정보가 정확하지 않을 때에, 예를 들어 오브젝트가 가려지거나 조명의 변화가 갑작스럽게 큰 경우 위치 추정이 쉽게 손실됩니다. 또한, 기준 프레임의 정확한 포즈 추정이 가능하지 않을 때, 추후에 상당한 에러가 생길 것 입니다. 그리고 두 프레임의 데이터 만 사용하면 모아온 모든 정보를 의미있게 사용하는 것이 아닙니다. 보다 자연스러운 방법은 현재 프레임을 기준 프레임과 비교하는 대신 현재 프레임을 맵과 비교하는 것입니다. 따라서 현재 프레임을 지도에 매치하는 방법과 지도 지점을 최적화하는 방법에 대해 신경을 써야합니다.
 4. 각 단계의 실행 시간이 출력되기 때문에 계산량을 일반적으로 이해할 수 있습니다 (표 9-1).
 
-** 표 9-1 삽입 **
+![Table_1](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/table_9_1.PNG?raw=true)
 (역자: 왼쪽에서부터 ‘특징점 추출’, ‘디스크립터 계산’, ‘특징 점 매칭’, ‘PnP 계산’, ‘기타’, ‘통합’)
 
 특징 포인트의 추출 및 매칭은 계산 시간의 대부분을 차지하는 반면, 겉으로 보기에는 복잡한 PnP 최적화는 계산에 비해 거의 무시할 수 있음을 알 수 있습니다. 따라서, 특징 추출 방법 및 일치 알고리즘의 속도를 향상시키는 방법은 특징 지점 방법의 중요한 주제가 될 것입니다. Direct / Optical Flow을 사용하는 예측 가능한 방법은 무거운 피쳐 계산을 효과적으로 피하는 것입니다. 직접 및 광학 흐름 방법은이 책 이전에 논의되었으며 독자는 독자적으로 시도 할 수 있습니다.
@@ -241,21 +234,20 @@ slambook/project/0.2/test/run_vo.cpp
 
 비선형 최적화 문제에 대한 해답은 이미 강의 6과 7에서 소개되었습니다. 이 절의 목적은 구조보다는 포즈를 추정하기위한 것이므로 재 투영 오차를 최소화하여 최적화 문제를 구성하기 위해 카메라 포즈 ξ를 최적화 변수로 사용합니다. 이전과 마찬가지로 Google은 g2o에서 최적화 가장자리를 사용자 정의합니다. 하나의 위치 추정만 최적화하므로 단면적입니다.
 
-slambook/project/0.3/include/myslam/g2o_types.h
-
-**코드 삽입**
+![g2o_types.h](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/code_g20_types_h.PNG?raw=true)
+[Code](https://github.com/gaoxiang12/slambook/blob/master/project/0.3/include/myslam/g2o_types.h)
 
 3D 점과 카메라 모델을 멤버 변수에 넣으면 재 투영 오차와 자코비안 행렬을 쉽게 계산할 수 있습니다.
 
-slambook/project/0.3/src/g2o_types.cpp
-
-**코드 삽입 **
+![g2o_types.cpp](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/code_g20_types_cpp.png?raw=true)
+[Code](https://github.com/gaoxiang12/slambook/blob/master/project/0.3/src/g2o_types.cpp)
 
 그런 다음 이전 PoseEstimationPnP 함수에서 RANSAC PnP 결과의 초기 값으로 수정 한 다음 g2o를 호출하여 양식을 최적화합니다.
 
 slambook/project/0.3/src/visual_odometry.cpp
 
-**또드**
+![visual_odometry.cpp](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/code_visual_odometry_cpp.PNG?raw=true)
+[Code](https://github.com/gaoxiang12/slambook/blob/master/project/0.3/src/visual_odometry.cpp)
 
 저자는 독자가 이 프로그램을 직접 실행하고 이전 결과를 비교해보는 것을 추천합니다. 추정 된 움직임이 훨씬 안정적이라는 것을 알게 될 것입니다. 동시에 새로운 최적화가 여전히 구조화되지 않았기 때문에 규모가 작고 컴퓨팅 시간에 대한 영향은 기본적으로 무시할 수 있습니다. 전체적인 시각적 거리계 계산 시간은 여전히 약 30ms입니다.
 
@@ -267,7 +259,7 @@ slambook/project/0.3/src/visual_odometry.cpp
 
 이 섹션에서는 VO가 일치하는 특징점을 지도에 넣고 현재 프레임을지도 지점과 일치시켜 포즈를 계산합니다. 이 방법과 이전 방법의 차이점은 그림 9-6에 나와 있습니다.
 
-** 9-6 그림 삽입 **
+![image 9-6](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/img_9_6.PNG?raw=true)
 그림 9-6  ‘두 프레임의 VO’와 ‘지도 기능을 사용한 VO’의 작동 원리의 차이
 
 두 프레임을 사용한 VO 방식은 기준 프레임과 현재 프레임 사이의 특징 일치 및 동작 관계를 계산하고, 계산 후 이전 프레임을 새로운 기준 프레임으로 설정합니다. 지도를 사용하는 VO에서는 각 프레임은 새로운 특징 지점을 추가하거나 이전 특징 지점의 위치 추정치를 업데이트하는 것과 같은 정보를 지도에 제공합니다. 맵의 피쳐 포인트 위치는 종종 월드 좌표에 있습니다. 따라서 현재 프레임이 업데이트되면 맵과 피쳐 매칭 및 모션 관계, 즉 를 직접 계산해야 합니다.
@@ -284,23 +276,24 @@ VO에서는 위치를 추정하기 위해 직접 사용할 수있는 지역 지�
 
 slambook/project/0.4/include/myslam/mappoint.h
 
-** 코드 삽입 **
+![mappoint.h_2](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/code_mappoint_h_2.png)
+[Code](https://github.com/gaoxiang12/slambook/blob/master/project/0.4/include/myslam/mappoint.h)
 
 주요 변경 사항은 VisualOdometry 클래스에 있습니다. 워크 플로우의 변경으로 인해 각 반복에서 맵 추가 및 삭제, 각 맵 포인트가 관측 된 횟수 계산 등과 같은 몇 가지 주요 기능을 수정했습니다. 이러한 것들은 사소한 일이므로 독자들이 GitHub에 제공된 소스 코드를 자세히 살펴볼 것을 권장합니다. 다음 항목에 집중하십시오.
 
 1. 첫 번째 프레임의 특징점을 추출한 후 첫 번째 프레임의 모든 특징점을지도에 넣습니다.
 
-** 코드 삽입 **
+![change_vo](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/code_visual_odometry_h_A.PNG?raw=true)
 
 2. 후속 프레임에서는 OptimizeMap 함수를 사용하여 맵을 최적화합니다. 여기에는 보기에 없는 지점 삭제, 일치 항목 수가 줄어들 때 새로운 지점 추가 등이 포함됩니다.
 
-** 코드 삽입 **
+![change_vo_2](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/code_visual_odometry_h_B.PNG?raw=true)
 
 저자는 고의적으로 몇 구간을 비워두었고, 관심있는 독자들이 직접 이 칸을 채워보았으면 합니다. 예를 들어, triangulation을 사용하여 피쳐 포인트의 세계 좌표를 업데이트하거나 맵 크기를보다 효과적으로 관리하기위한 전략을 고려할 수 있습니다. 이러한 문제는 모두 열려 있습니다.
 
 3. 기능 일치 코드. 매칭하기 전에 맵에서 후보 포인트 (시야에 나타나는 포인트)를 취하여 현재 프레임의 피쳐 설명자와 일치시킵니다.
 
-** 또드 **
+![change_vo_3](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/code_visual_odometry_h_C.PNG?raw=true)
 
 기존지도와 더불어 "키 프레임"이라는 개념을 도입했습니다. 키 프레임은 많은 비주얼 SLAM에서 사용되지만 개념은 주로 백엔드를위한 것이므로 나중에 해당 섹션에서 키 프레임의 자세한 처리에 대해 설명합니다. 실제로는 리소스 집약적인 각 이미지에 대한 세부적인 최적화 및 루프백 검색을 원하지 않습니다. 적어도 카메라가 제 위치에 놓여지면 전체 모델 (지도 또는 궤적)이 커지기를 원하지 않습니다. 따라서 백엔드 최적화의 주요 목표는 키 프레임입니다.
 
@@ -308,7 +301,7 @@ slambook/project/0.4/include/myslam/mappoint.h
 이 섹션의 구현은 일부 키 프레임을 추출하고 백엔드 최적화를위한 데이터를 준비합니다. 이제 독자는 이 프로젝트를 컴파일하고 어떻게 작동하는지 볼 수 있습니다. 이 섹션의 루틴은 지역 지도의 포인트를 이미지 평면에 투영하고 표시합니다. 포즈가 올바르게 추정되면 공간에서 고정 된 것처럼 보입니다. 반대로, 만약 당신이 부 자연스럽게 움직이는 것을 느끼면, 카메라 자세 추정이 충분히 정확하지 않거나, 또는 특징점의 위치가 충분히 정확하지 않을 수 있습니다.
 우리는 버전 0.4에서 지도의 최적화를 제공하지 않았으며, 독자는 독자적으로 시도해 보는 것이 좋습니다. 사용 된 원리는 주로 최소 제곱 및 삼각 측량이며 처음 두 강의에서 소개되었으며 너무 어렵지 않을 것입니다.
 
-** 그림 9-7 삽입 **
+![image 9-7](https://github.com/slam-research-group-kr/slambook-ko/blob/master/resources/ch9/img_9_7.PNG?raw=true)
 그림 9-7 0.4 버전의 VO 스크린 샷. 두 시점에 도로 표시 투영 지점이 표시되어 있습니다.
 
 ### 9.5 요약
@@ -323,14 +316,5 @@ slambook/project/0.4/include/myslam/mappoint.h
 ## 연습문제
 
 1.이 책에서 사용 된 C ++ 기술을 이해하고 있습니까? 이해할 수없는 경우 검색 엔진을 사용하여 범위 기반 루프, 람다 식, 스마트 포인터, 디자인 패턴의 싱글 톤 패턴 등을 비롯한 관련 지식을 익히십시오.
-
 2. 0.3 또는 0.4 버전을 기반으로지도에 최적화 된 코드를 추가하십시오. 대안으로, RGB-D 깊이 값의 오차를 제거하기 위해 PnP 결과를 triangulation할 수도 있습니다.
-
 3. 코드가 불일치를 처리하는 방법을 관찰하십시오. RANSAC이란 무엇입니까? 문헌 [39]을 읽거나 이해할 수있는 관련 정보를 검색하십시오.
-
-
-<sub>subscript</sub>
-
-
-
-
