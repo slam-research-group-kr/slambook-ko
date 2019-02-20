@@ -1,6 +1,6 @@
 ## Welcome to 14 Lectures on Visual SLAM: From Theory to Practice, by Xiang Gao, Tao Zhang, Qinrui Yan and Yi Liu
 
-이책은 이 책의 한국어 버전입니다. 중국어 독자이시라면 [여기](https://item.jd.com/12077296218.html)를 확인해보세요.  
+이 문서는 [이 책](https://item.jd.com/12077296218.html)의 한국어 버전입니다.
 소스 코드는 [여기](https://github.com/gaoxiang12/slambook)에서 확인할수 있습니다.  
 
 [Original Repository](https://github.com/gaoxiang12/slambook-en)
