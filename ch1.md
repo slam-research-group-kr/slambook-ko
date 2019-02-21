@@ -17,7 +17,7 @@
 - 신동원 (광주과학기술원 박사과정)
 - 김선호 (Virnect 선임연구원)
 - 조원재 (일본국립농업기술혁신공학센터 연구원)
-- 장형기 (Imperial College London 석사과정)
+- 장형기 (Imperial College London 석사)
 - 박준영 (광주과학기술원 석사과정)
 
 2018년 10월 1일
