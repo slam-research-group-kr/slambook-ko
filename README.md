@@ -16,7 +16,7 @@
 ### Chapter 8. [Direct (Intensity based) Visual Odometry](/ch8.md)
 ### Chapter 9. [Project](/ch9.md) (Done)
 ### Chapter 10. [Backend Optimization](/ch10.md)
-### Chapter 11. [Pose Graph and Factor Graph](/ch11.md)
+### Chapter 11. [Pose Graph and Factor Graph](/ch11.md) (In progress)
 ### Chapter 12. [Loop Closure](/ch12.md)
 ### Chapter 13. [Dense Reconstruction and Mapping](/ch13.md)
 ### Chapter 14. [Future of Visual SLAM](/ch14.md) (Done)
